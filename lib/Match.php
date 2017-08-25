@@ -2,6 +2,12 @@
 
 class Match {
 
+
+    /**
+     * @var int
+     */
+    private $id;
+
     /**
      * @var String
      */
@@ -31,6 +37,24 @@ class Match {
      * @var int
      */
     private $oddId;
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param int $id
+     * @return Match
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
+    }
 
     /**
      * @return mixed
@@ -87,7 +111,7 @@ class Match {
     }
 
     /**
-     * @return mixed
+     * @return League
      */
     public function getLeague()
     {
