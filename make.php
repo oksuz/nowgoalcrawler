@@ -1,5 +1,7 @@
 <?php
+
 define('LIB_DIR', './lib');
+define('OUT_PATH', './out');
 define('TMP_LIB_DIR', './tmp_lib');
 define('ARCHIVE_NAME', 'lib.phar');
 
@@ -31,3 +33,10 @@ foreach ($tmpDirIterator as $tmpFile) {
     }
 }
 rmdir(TMP_LIB_DIR);
+
+mkdir(OUT_PATH, 0775);
+$move = [ARCHIVE_NAME, "App.php", "conf.php", "run", "app.log"];
+
+foreach ($move as $m) {
+    copy($m, OUT_PATH . DIRECTORY_SEPARATOR . $m);
+}
