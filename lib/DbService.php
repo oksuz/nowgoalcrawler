@@ -58,7 +58,7 @@ class DbService {
             $stmt->execute();
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), 'Duplicate entry') === false) {
-                echo sprintf('An exception occurred while saving match %s, e: %s \r\n<br>', $m->getOddId(), $e->getMessage());
+                echo sprintf('An exception occurred while saving match %s, e: %s \r\n', $m->getOddId(), $e->getMessage());
             }
         }
 
@@ -78,7 +78,7 @@ class DbService {
             throw new NoSuchMatchInQueueException("There are no match found for crawl");
         }
 
-        echo sprintf("lock and get match id: %s\r\n<br/>", $id["@update_id"]);
+        echo sprintf("lock and get match id: %s " . PHP_EOL, $id["@update_id"]);
 
         $stmt = $this->link->prepare("SELECT * FROM matchs WHERE id = :id");
         $stmt->execute(["id" => $id["@update_id"]]);
@@ -107,7 +107,7 @@ class DbService {
             "odd_id" => $m->getOddId(),
             "last_crawled_at" => date('Y-m-d H:i:s')
         ]);
-        echo sprintf("unlock match by oddId: %s <br/>\r\n", $m->getOddId());
+        echo sprintf("unlock match by oddId: %s " . PHP_EOL, $m->getOddId());
     }
 
     public function saveOddsComp(Match $match, $result)

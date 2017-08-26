@@ -20,7 +20,7 @@ class Crawler {
                 $match = $this->container->getDb()->getMatchFromQueue();
                 $url = sprintf('http://data.nowgoal.net/oddscomp/%s.html', $match->getOddId());
 
-                echo sprintf("go to url %s for odss <br/>\r\n", $url);
+                echo sprintf("go to url %s for odss" . PHP_EOL, $url);
 
                 curl_setopt($ch, CURLOPT_URL, $url);
                 curl_setopt($ch, CURLOPT_REFERER, "https//www.nowgoal.net");
@@ -39,7 +39,7 @@ class Crawler {
 
 
                 if (!empty($_3in1oddPath)) {
-                    echo sprintf("go to url %s for 3in1odds <br/>\r\n", $_3in1oddsUrl);
+                    echo sprintf("go to url %s for 3in1odds " . PHP_EOL, $_3in1oddsUrl);
                     curl_setopt($ch, CURLOPT_URL, $_3in1oddsUrl);
                     $response = curl_exec($ch);
                     if (curl_errno($ch) !== 0) {
@@ -53,10 +53,10 @@ class Crawler {
                     $this->container->getDb()->saveOverUnderOdds($_3in1oddsParser->getOverUnderOdds(), $match);
                 }
             } catch (NoSuchMatchInQueueException $e) {
-                echo "The end :) <br/>\r\n";
+                echo "The end :) " . PHP_EOL;
                 exit(0);
             } catch (CrawlerException $e) {
-                echo "crawler exception: " . $e->getMessage() . " <br> \r\n";
+                echo "crawler exception: " . $e->getMessage() . PHP_EOL;
             } catch (Exception $e) {
                 throw $e;
             } finally {

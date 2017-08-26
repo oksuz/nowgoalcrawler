@@ -3,16 +3,11 @@
 
 $instances = !empty($argv[1]) && intval($argv[1]) > 0 ? $argv[1] : 10;
 
-while (true) {
-
-    for ($i = 1; $i <= $instances; $i++) {
-        echo "executing command `/usr/bin/php App.php >> app.log` for instances " . $i . "\n";
-        exec("php App.php >> app.log &");
-    }
-
-    sleep(300);
-
+for ($i = 1; $i <= $instances; $i++) {
+    echo "executing command `/usr/bin/php App.php >> app.log` for instances " . $i . "\n";
+    exec("php App.php >> app.log &");
 }
 
+sleep(300);
 
 

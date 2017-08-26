@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 
 define('LIB_DIR', './lib');
@@ -11,7 +12,7 @@ function cleanTabsAndNewLines($content) {
     return "<?php " . str_replace($find, $replace, $content);
 }
 
-mkdir(TMP_LIB_DIR, 0777);
+@mkdir(TMP_LIB_DIR, 0777);
 $iterator = new DirectoryIterator(LIB_DIR);
 
 /**
@@ -34,7 +35,7 @@ foreach ($tmpDirIterator as $tmpFile) {
 }
 rmdir(TMP_LIB_DIR);
 
-mkdir(OUT_PATH, 0775);
+@mkdir(OUT_PATH, 0775);
 
 $move = [ARCHIVE_NAME, "App.php", "conf.php", "run", "app.log"];
 foreach ($move as $m) {
