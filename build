@@ -12,32 +12,80 @@ function cleanTabsAndNewLines($content) {
     return "<?php " . str_replace($find, $replace, $content);
 }
 
+function buildConf() {
+    $confContent = file_get_contents('conf.php.dist');
+    $replaces = [
+        "DB_HOST" => "localhost",
+        "DB_USER" => "root",
+        "DB_PASS" => "",
+        "DB_NAME" => "now_goal",
+        "DB_PREFIX" => "nowgoal_"
+    ];
+
+    echo "database information:" . PHP_EOL;
+
+    foreach ($replaces as $replace => $defaultValue) {
+        if (!empty($defaultValue)) {
+            echo $replace . " (". $defaultValue ."):";
+        } else {
+            echo $replace . " :";
+        }
+        $response = trim(fgets(STDIN));
+
+        if (empty($response) && !empty($defaultValue)) {
+            $confContent = str_replace("%". $replace ."%", $defaultValue, $confContent);
+        } elseif (!empty($response)) {
+            $confContent = str_replace("%". $replace ."%", $response, $confContent);
+        } else {
+            $confContent = str_replace("%". $replace ."%", "", $confContent);
+        }
+    }
+
+    file_put_contents(OUT_PATH . DIRECTORY_SEPARATOR . "conf.php", $confContent);
+}
+
+function makePhar() {
+    $iterator = new DirectoryIterator(LIB_DIR);
+
+    /**
+     * @var $it DirectoryIterator
+     */
+    foreach ($iterator as $it) {
+        if ($it->isFile()) {
+            file_put_contents(TMP_LIB_DIR . DIRECTORY_SEPARATOR . $it->getFilename(), cleanTabsAndNewLines(file_get_contents($it->getPathname())));
+        }
+    }
+
+    $phar = new Phar(ARCHIVE_NAME, 0, ARCHIVE_NAME);
+    $phar->buildFromDirectory(TMP_LIB_DIR);
+}
+
+function clean() {
+    $tmpDirIterator = new DirectoryIterator(TMP_LIB_DIR);
+    foreach ($tmpDirIterator as $tmpFile) {
+        if ($tmpFile->isFile()) {
+            unlink($tmpFile->getPathname());
+        }
+    }
+    rmdir(TMP_LIB_DIR);
+
+}
+
+function out() {
+    $move = [ARCHIVE_NAME, "App.php", "run", "app.log", "supervisor-nowgoal.conf"];
+    foreach ($move as $m) {
+        copy($m, OUT_PATH . DIRECTORY_SEPARATOR . $m);
+    }
+}
+
 @mkdir(TMP_LIB_DIR, 0777);
-$iterator = new DirectoryIterator(LIB_DIR);
-
-/**
- * @var $it DirectoryIterator
- */
-foreach ($iterator as $it) {
-    if ($it->isFile()) {
-        file_put_contents(TMP_LIB_DIR . DIRECTORY_SEPARATOR . $it->getFilename(), cleanTabsAndNewLines(file_get_contents($it->getPathname())));
-    }
-}
-
-$phar = new Phar(ARCHIVE_NAME, 0, ARCHIVE_NAME);
-$phar->buildFromDirectory(TMP_LIB_DIR);
-
-$tmpDirIterator = new DirectoryIterator(TMP_LIB_DIR);
-foreach ($tmpDirIterator as $tmpFile) {
-    if ($tmpFile->isFile()) {
-        unlink($tmpFile->getPathname());
-    }
-}
-rmdir(TMP_LIB_DIR);
-
 @mkdir(OUT_PATH, 0775);
+@mkdir(OUT_PATH . DIRECTORY_SEPARATOR . "tmp", 0777);
 
-$move = [ARCHIVE_NAME, "App.php", "conf.php", "run", "app.log"];
-foreach ($move as $m) {
-    copy($m, OUT_PATH . DIRECTORY_SEPARATOR . $m);
-}
+
+makePhar();
+buildConf();
+out();
+clean();
+
+

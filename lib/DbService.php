@@ -25,12 +25,12 @@ class DbService {
     }
 
     public function getQId() {
-        $stmt = $this->link->prepare("SELECT id, created_at FROM q_log ORDER BY id DESC LIMIT 1");
+        $stmt = $this->link->prepare("SELECT id, created_at FROM ". DB_PREFIX ."q_log ORDER BY id DESC LIMIT 1");
         $stmt->execute();
         $result = $stmt->fetch();
 
         if ($result === false || (time() - strtotime($result["created_at"])) > self::FIVE_MIN_IN_SEC) {
-            $this->link->query("INSERT INTO q_log(created_at) VALUES(NOW())");
+            $this->link->query("INSERT INTO ". DB_PREFIX ."q_log(created_at) VALUES(NOW())");
             return intval($this->link->lastInsertId());
         }
 
@@ -40,7 +40,7 @@ class DbService {
 
 
     public function createMatch($qId, Match $m) {
-        $query = "INSERT INTO matchs(q_id, odd_id, home_team, away_team, match_time, time_stamp, league_short_name, league, created_at) 
+        $query = "INSERT INTO ". DB_PREFIX ."matchs(q_id, odd_id, home_team, away_team, match_time, time_stamp, league_short_name, league, created_at) 
           VALUES (:q_id, :odd_id, :home_team, :away_team, :match_time, :time_stamp, :league_short_name, :league, :created_at)";
 
         $stmt = $this->link->prepare($query);
@@ -70,8 +70,8 @@ class DbService {
      */
     public function getMatchFromQueue() {
         $this->link->query("SET @update_id := 0;");
-        $this->link->query("SET @id = (SELECT id FROM matchs WHERE is_locked = 0 AND is_active = 1 AND match_time > DATE_ADD(NOW(), INTERVAL -2 HOUR) AND (last_crawled_at IS NULL OR last_crawled_at < DATE_ADD(NOW(), INTERVAL -10 MINUTE)) ORDER BY match_time ASC LIMIT 1)");
-        $this->link->query("UPDATE matchs SET is_locked = 1, id = (SELECT @update_id := @id) WHERE id = @id");
+        $this->link->query("SET @id = (SELECT id FROM ". DB_PREFIX ."matchs WHERE is_locked = 0 AND is_active = 1 AND match_time > DATE_ADD(NOW(), INTERVAL -2 HOUR) AND (last_crawled_at IS NULL OR last_crawled_at < DATE_ADD(NOW(), INTERVAL -10 MINUTE)) ORDER BY match_time ASC LIMIT 1)");
+        $this->link->query("UPDATE ". DB_PREFIX ."matchs SET is_locked = 1, id = (SELECT @update_id := @id) WHERE id = @id");
         $id = $this->link->query("SELECT @update_id")->fetch();
 
         if (empty($id["@update_id"])) {
@@ -80,7 +80,7 @@ class DbService {
 
         echo sprintf("lock and get match id: %s " . PHP_EOL, $id["@update_id"]);
 
-        $stmt = $this->link->prepare("SELECT * FROM matchs WHERE id = :id");
+        $stmt = $this->link->prepare("SELECT * FROM ". DB_PREFIX ."matchs WHERE id = :id");
         $stmt->execute(["id" => $id["@update_id"]]);
         $match = $stmt->fetch();
 
@@ -102,7 +102,7 @@ class DbService {
     }
 
     public function unlockMatch(Match $m) {
-        $stmt = $this->link->prepare("UPDATE matchs SET is_locked = 0, last_crawled_at = :last_crawled_at WHERE odd_id = :odd_id");
+        $stmt = $this->link->prepare("UPDATE ". DB_PREFIX ."matchs SET is_locked = 0, last_crawled_at = :last_crawled_at WHERE odd_id = :odd_id");
         $stmt->execute([
             "odd_id" => $m->getOddId(),
             "last_crawled_at" => date('Y-m-d H:i:s')
@@ -113,7 +113,7 @@ class DbService {
     public function saveOddsComp(Match $match, $result)
     {
         $stmt = $this->link->prepare("INSERT INTO 
-            odds_comp(match_id, _1x2_odds_hw, _1x2_odds_d, _1x2_odds_aw, _data, _handicap_odds_home, _handicap_odds_odds, _handicap_odds_away, _over_under_odds_over, _over_under_odds_odds, _over_under_odds_under)
+            ". DB_PREFIX ."odds_comp(match_id, _1x2_odds_hw, _1x2_odds_d, _1x2_odds_aw, _data, _handicap_odds_home, _handicap_odds_odds, _handicap_odds_away, _over_under_odds_over, _over_under_odds_odds, _over_under_odds_under)
             VALUES(:match_id, :_1x2_odds_hw, :_1x2_odds_d, :_1x2_odds_aw, :_data, :_handicap_odds_home, :_handicap_odds_odds, :_handicap_odds_away, :_over_under_odds_over, :_over_under_odds_odds, :_over_under_odds_under) 
             ON DUPLICATE KEY UPDATE
             _1x2_odds_hw = :_1x2_odds_hw, 
@@ -153,12 +153,12 @@ class DbService {
 
     private function saveOdds($table, array $odds, Match $m) {
         $statements = [];
-        $stmt = $this->link->prepare(sprintf("DELETE FROM %s WHERE match_id = :match_id", $table));
+        $stmt = $this->link->prepare(sprintf("DELETE FROM %s WHERE match_id = :match_id", DB_PREFIX . $table));
         $stmt->bindValue("match_id", $m->getId());
         array_push($statements, $stmt);
 
         foreach ($odds as $odd) {
-            $stmt = $this->link->prepare(sprintf("INSERT INTO %s(match_id, time, score, home, draw, away, update_timestamp, update_time, status) VALUES(:match_id, :time, :score, :home, :draw, :away, :update_timestamp, :update_time, :status)", $table));
+            $stmt = $this->link->prepare(sprintf("INSERT INTO %s(match_id, time, score, home, draw, away, update_timestamp, update_time, status) VALUES(:match_id, :time, :score, :home, :draw, :away, :update_timestamp, :update_time, :status)", DB_PREFIX . $table));
             foreach ($odd as $key => $value) {
                 $stmt->bindValue($key, $value);
             }
