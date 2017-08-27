@@ -12,6 +12,7 @@ RUN dpkg-reconfigure -f noninteractive tzdata
 RUN mkdir -p /opt/app
 COPY out/* /opt/app/
 
+RUN mkdir /opt/app/tmp
 RUN chmod 0777 /opt/app/tmp
 RUN chmod 0777 /opt/app/app.log
 RUN chmod +x /opt/app/run
