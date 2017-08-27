@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 
 MAINTAINER Yunus Oksuz <yunusoksuz@gmail.com>
 RUN apt-get update -y
-RUN apt-get install -y tzdata locales cron php-mcrypt php-mysql php php-curl supervisor
+RUN apt-get install -y tzdata locales cron php-mcrypt php-mysql php php-curl php-dom php-xml supervisor
 
 # configure timezone
 RUN echo "Europe/Istanbul" > /etc/timezone
